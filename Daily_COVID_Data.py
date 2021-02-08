@@ -23,15 +23,18 @@ class GetCovidData:
         self.download_variant_data()
 
     def was_file_modified_today(self, filename=None):
-        file_name = pathlib.Path(filename)
-        file_modification_time = datetime.datetime.fromtimestamp(file_name.stat().st_mtime)
-        now = date.today()
 
-        # if the file is more than a day old, return false
-        if now > file_modification_time.date():
+        try:
+            file_name = pathlib.Path(filename)
+            file_modification_time = datetime.datetime.fromtimestamp(file_name.stat().st_mtime)
+            now = date.today()
+            # if the file is more than a day old, return false
+            if now > file_modification_time.date():
+                return False
+            else:
+                return True
+        except:
             return False
-        else:
-            return True
 
     # fetch the updated covid data for every state
     # the data is a large csv, so only refresh it once a day
@@ -42,10 +45,8 @@ class GetCovidData:
             # download the csv from COVID project
             self.covid_df = pd.read_csv(self.covid_url)
 
-            # create date columns
-            self.covid_df['year'] = self.covid_df['date'][:5]
-            self.covid_df['month'] = self.covid_df['date'][4:7]
-            self.covid_df['day'] = self.covid_df['date'][7:]
+            # create date column
+            self.covid_df['date_obj'] = pd.to_datetime(self.covid_df['date'], format='%Y%m%d')
 
             # output to csv for storage
             self.covid_df.to_csv(self.covid_file_name)
@@ -64,7 +65,7 @@ class GetCovidData:
             df_list = pd.read_html(self.variant_url)
             df = df_list[0]
 
-            #rename columns
+            # rename columns
             col_names = ["Variant designation",
                          "Location",
                          "Date",
@@ -82,6 +83,6 @@ class GetCovidData:
             self.variant_df = df2.append(df)
             self.variant_df.to_csv(self.variant_file_name, index=False)
 
-        #otherwise just load the data
+        # otherwise just load the data
         else:
             self.variant_df = pd.read_csv(self.variant_file_name)
