@@ -17,8 +17,6 @@ app.layout = html.Div([
               Input('url', 'pathname'))
 def display_page(pathname):
     if pathname == '/':
-        return app1.layout_page_1
-    elif pathname == '/app2':
         return app2.layout_page_2
     else:
         return '404-Oops, these are not the pages you are looking for'

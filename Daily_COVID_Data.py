@@ -1,13 +1,8 @@
 import pandas as pd
-import numpy as np
-import requests
-import csv
 import pathlib
 import datetime
 from datetime import date
-import lxml.html as lh
-from bs4 import BeautifulSoup
-import urllib.request
+
 
 
 class GetCovidData:
@@ -21,6 +16,9 @@ class GetCovidData:
         self.variant_df = None
         self.download_covid_data()
         self.download_variant_data()
+        self.data_analysis()
+        # output to csv for storage
+        self.covid_df.to_csv(self.covid_file_name)
 
     def was_file_modified_today(self, filename=None):
 
@@ -47,9 +45,6 @@ class GetCovidData:
 
             # create date column
             self.covid_df['date_obj'] = pd.to_datetime(self.covid_df['date'], format='%Y%m%d')
-
-            # output to csv for storage
-            self.covid_df.to_csv(self.covid_file_name)
 
         # otherwise load the csv already downloaded
         else:
@@ -86,3 +81,19 @@ class GetCovidData:
         # otherwise just load the data
         else:
             self.variant_df = pd.read_csv(self.variant_file_name)
+
+    def data_analysis(self):
+        df = pd.read_csv("population.csv")
+        if 'population_x' in self.covid_df:
+            self.covid_df.drop('population_x', axis=1, inplace=True)
+        if 'population' in self.covid_df:
+            self.covid_df.drop('population', axis=1, inplace=True)
+        self.covid_df = self.covid_df.merge(df, on='state')
+        self.covid_df['pos_per_capita'] = self.covid_df['positive'] / self.covid_df['population']
+        self.covid_df['cases_per_100k'] = self.covid_df['positive'] / self.covid_df['population'] * 100000
+        self.covid_df['daily_pos_rate'] = self.covid_df['positiveIncrease'] / self.covid_df['totalTestResultsIncrease'] * 100
+        self.covid_df['total_pos_rate'] = self.covid_df['positive'] / self.covid_df['totalTestResults'] * 100
+
+
+
+

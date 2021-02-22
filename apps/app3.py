@@ -3,9 +3,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 import plotly.express as px
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ClientsideFunction
 from dash.exceptions import PreventUpdate
 import plotly.graph_objs as go
+from datetime import date, datetime
 
 from app import app
 
@@ -13,7 +14,7 @@ df = pd.read_csv('https://plotly.github.io/datasets/country_indicators.csv')
 
 available_indicators = df['Indicator Name'].unique()
 
-layout_page_1 = html.Div([
+layout_page_3 = html.Div([
     html.Div([
 
         html.Div([
@@ -52,96 +53,97 @@ layout_page_1 = html.Div([
 
     html.Div([
         dcc.Graph(
-            id='crossfilter-indicator-scatter',
-            hoverData={'points': [{'customdata': 'Japan'}]}
+            id='C19_Map'
         )
     ], style={'width': '49%', 'display': 'inline-block', 'padding': '0 20'}),
     html.Div([
-        dcc.Graph(id='x-time-series'),
-        dcc.Graph(id='y-time-series'),
+        dcc.Graph(id='by_state_by_day2'),
     ], style={'display': 'inline-block', 'width': '49%'}),
 
-    html.Div(dcc.Slider(
-        id='crossfilter-year--slider',
-        min=df['Year'].min(),
-        max=df['Year'].max(),
-        value=df['Year'].max(),
-        marks={str(year): str(year) for year in df['Year'].unique()},
-        step=None
-    ), style={'width': '49%', 'padding': '0px 20px 20px 20px'}),
-    html.Br(),
-    dcc.Link('Navigate to "/"', href='/'),
-    html.Br(),
-    dcc.Link('Navigate to "/page-2"', href='/page-2'),
+
 ])
 
+# Page 2 callbacks
 @app.callback(
-    dash.dependencies.Output('crossfilter-indicator-scatter', 'figure'),
-    [dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-xaxis-type', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-type', 'value'),
-     dash.dependencies.Input('crossfilter-year--slider', 'value')])
-def update_graph(xaxis_column_name, yaxis_column_name,
-                 xaxis_type, yaxis_type,
-                 year_value):
-    dff = df[df['Year'] == year_value]
+    Output("C19_Map", "figure"),
+    Input('date_picker', 'date')
+)
+def update_output(date_selected):
+    df = pd.read_csv("daily_covid_data.csv")
 
-    fig = px.scatter(x=dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
-            y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
-            hover_name=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name']
-            )
+    if len(date_selected) == 10:
+        date_selected = date_selected.replace('-', '')
+        date_selected = int(date_selected)
+    else:
+        date_selected = date_selected[:-9]
+        date_selected = date_selected.replace('-', '')
+        date_selected = int(date_selected)
 
-    fig.update_traces(customdata=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'])
+    df.drop(df[df['date'] != date_selected].index, inplace=True)
 
-    fig.update_xaxes(title=xaxis_column_name, type='linear' if xaxis_type == 'Linear' else 'log')
+    fig = px.choropleth(df,
+                        locations="state",
+                        color="positive",
+                        hover_name="state",
+                        projection='albers usa',
+                        title='SARS-CoV-2 Data By State',
+                        locationmode="USA-states",
+                        color_continuous_scale=px.colors.sequential.Plasma)
 
-    fig.update_yaxes(title=yaxis_column_name, type='linear' if yaxis_type == 'Linear' else 'log')
-
-    fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
+    fig.update_layout(title=dict(font=dict(size=28), x=0.5, xanchor='center'),
+                      autosize=False,
+                      width=1100,
+                      height=800,
+                      margin=dict(
+                          l=10,
+                          r=10,
+                          b=100,
+                          t=100,
+                          pad=1),
+                      paper_bgcolor="LightSteelBlue",
+                      )
 
     return fig
 
-
-def create_time_series(dff, axis_type, title):
-
-    fig = px.scatter(dff, x='Year', y='Value')
-
-    fig.update_traces(mode='lines+markers')
-
-    fig.update_xaxes(showgrid=False)
-
-    fig.update_yaxes(type='linear' if axis_type == 'Linear' else 'log')
-
-    fig.add_annotation(x=0, y=0.85, xanchor='left', yanchor='bottom',
-                       xref='paper', yref='paper', showarrow=False, align='left',
-                       bgcolor='rgba(255, 255, 255, 0.5)', text=title)
-
-    fig.update_layout(height=225, margin={'l': 20, 'b': 30, 'r': 10, 't': 10})
-
-    return fig
+@app.callback(
+    Output('output-container-date-picker-single', 'children'),
+    Input('date_picker', 'date'))
+def update_output(date_value):
+    string_prefix = 'You have selected: '
+    if date_value is not None:
+        if len(date_value) > 10:
+            return string_prefix + date_value[:-9]
+        else:
+            return string_prefix + date_value
 
 
 @app.callback(
-    dash.dependencies.Output('x-time-series', 'figure'),
-    [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
-     dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-xaxis-type', 'value')])
-def update_y_timeseries(hoverData, xaxis_column_name, axis_type):
-    country_name = hoverData['points'][0]['customdata']
-    dff = df[df['Country Name'] == country_name]
-    dff = dff[dff['Indicator Name'] == xaxis_column_name]
-    title = '<b>{}</b><br>{}'.format(country_name, xaxis_column_name)
-    return create_time_series(dff, axis_type, title)
+    dash.dependencies.Output('by_state_by_day2', 'fig2'),
+    dash.dependencies.Input('C19_Map', 'hoverData'))
 
+def update_plot_2(hoverData):
 
-@app.callback(
-    dash.dependencies.Output('y-time-series', 'figure'),
-    [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
-     dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-type', 'value')])
-def update_x_timeseries(hoverData, yaxis_column_name, axis_type):
-    dff = df[df['Country Name'] == hoverData['points'][0]['customdata']]
-    dff = dff[dff['Indicator Name'] == yaxis_column_name]
-    return create_time_series(dff, axis_type, yaxis_column_name)
+    #check if we have hoverdata, if not default to oregon
+    if (hoverData):
+        state = hoverData['points'][0]['location']
+    else:
+        state = 'OR'
+
+    df2 = df[df['state'] == state]
+
+    fig2 = px.line(df2, x="date", y="positive", title='Cases by date in ' + state)
+
+    fig2.update_layout(title=dict(font=dict(size=28), x=0.5, xanchor='right'),
+                      autosize=False,
+                      width=500,
+                      height=300,
+                      margin=dict(
+                          l=10,
+                          r=10,
+                          b=10,
+                          t=10,
+                          pad=1),
+                      paper_bgcolor="LightSteelBlue",
+                      )
+    fig2.show()
 
