@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output
 from Daily_COVID_Data import GetCovidData
 
 from app import app
-from apps import app1, app2
+from apps import app2
 
 
 app.layout = html.Div([
