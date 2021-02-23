@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from Daily_COVID_Data import GetCovidData
 
-from app import app
+from app import app, server
 from apps import app2
 
 
