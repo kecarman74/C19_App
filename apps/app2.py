@@ -6,6 +6,7 @@ from dash.dependencies import Input, Output
 from datetime import date, datetime
 from Daily_COVID_Data import GetCovidData
 from app import app
+import dash_bootstrap_components as dbc
 
 new_df = GetCovidData()
 df = new_df.covid_df
@@ -23,56 +24,64 @@ data_cat_dict = {
 drop_items_k = data_cat_dict.keys()
 drop_items_v = data_cat_dict.values()
 
-layout_page_2 = html.Div([
+layout_page_2 = dbc.Container([
+    dbc.Row([
+        dbc.Col([
+            html.Div([
+                    # Data Category drop down
+                    dcc.Dropdown(
+                        id='select_data_type',
+                        options=[
+                            {'label': 'Cumulative Positive', 'value': 'positive'},
+                            {'label': 'Total Tests', 'value': 'totalTestResults'},
+                            {'label': 'Currently Hospitalized', 'value': 'hospitalizedCurrently'},
+                            {'label': 'Currently On Ventilator', 'value': 'onVentilatorCurrently'},
+                            {'label': 'Daily New Cases', 'value': 'positiveIncrease'},
+                            {'label': 'Cases Per 100k Pop', 'value': 'cases_per_100k'},
+                            {'label': 'Cumulative Test Positivity', 'value': 'total_pos_rate'}
+                        ],
+                        value='positive',
+                        style ={'color': 'black'}
+                    )
+                ])
+            ], width={'size':5, 'offset':1, 'order':1}, align="center"),
+        dbc.Col([
+            # date picker
+            html.Div([dcc.DatePickerSingle(
+                id='date_picker',
+                min_date_allowed=datetime.strptime(str(df['date'].min()), '%Y%m%d'),
+                max_date_allowed=datetime.strptime(str(df['date'].max()), '%Y%m%d'),
+                date=datetime.strptime(str(df['date'].max()), '%Y%m%d')
+            ),
+                html.Div(id='output-container-date-picker-single')
+            ])
+        ], width={'size':5, 'offset':0, 'order':2}),
+    ],no_gutters=True),
 
-    html.Div([
-        # Data Category drop down
-        dcc.Dropdown(
-            id='select_data_type',
-            options=[
-                {'label': 'Cumulative Positive', 'value': 'positive'},
-                {'label': 'Total Tests', 'value': 'totalTestResults'},
-                {'label': 'Currently Hospitalized', 'value': 'hospitalizedCurrently'},
-                {'label': 'Currently On Ventilator', 'value': 'onVentilatorCurrently'},
-                {'label': 'Daily New Cases', 'value': 'positiveIncrease'},
-                {'label': 'Cases Per 100k Pop', 'value': 'cases_per_100k'},
-                {'label': 'Cumulative Test Positivity', 'value': 'total_pos_rate'}
-            ],
-            value='positive'
-        )
-
-    ],
-        style={'width': '25%', 'display': 'inline-block'}),
-
-    # date picker
-    html.Div([dcc.DatePickerSingle(
-        id='date_picker',
-        min_date_allowed=datetime.strptime(str(df['date'].min()), '%Y%m%d'),
-        max_date_allowed=datetime.strptime(str(df['date'].max()), '%Y%m%d'),
-        date=datetime.strptime(str(df['date'].max()), '%Y%m%d')
-    ),
-        html.Div(id='output-container-date-picker-single')
-    ]),
-
-    # C19 map and scatter plot
-    html.Div([
-        dcc.Graph(
-            id='C19_Map'
-        )
-    ], style={'width': '60%', 'display': 'inline-block'}),
-
-    # click and hover graphs
-    html.Div([
-        dcc.Graph(id='by_state_by_day'),
-        dcc.Graph(id='by_state_by_day2'),
-    ], style={'display': 'inline-block', 'width': '40%', 'height': '20%'}),
-
-html.Div([
-    html.P('Select a category and date above. The map will display the data for that date.'),
-    html.P("Click on a state to chart data by time, hover over other states to compare.")
-])
-
-])
+    dbc.Row([
+        dbc.Col([
+            # C19 map and scatter plot
+            html.Div([
+                dcc.Graph(
+                    id='C19_Map'
+                )
+            ], className='h-100 flex-grow-1')
+        ], width={'size':8, 'offset':0, 'order':1}, align="center"),
+        dbc.Col([
+            # click and hover graphs
+            html.Div([
+                dcc.Graph(id='by_state_by_day'),
+                dcc.Graph(id='by_state_by_day2'),
+            ])
+        ], width={'size':4, 'offset':0, 'order':2}),
+    ],no_gutters=True),
+    dbc.Row([
+        html.Div([
+            html.P('Select a category and date above. The map will display the data for that date.'),
+            html.P("Click on a state to chart data by time, hover over other states to compare.")
+        ])
+    ])
+], fluid=True)
 
 
 
@@ -104,18 +113,7 @@ def update_output(date_selected, data_type):
                         locationmode="USA-states",
                         color_continuous_scale=px.colors.sequential.Plasma)
 
-    fig.update_layout(title=dict(font=dict(size=28), x=0.5, xanchor='center'),
-                      autosize=False,
-                      width=1100,
-                      height=800,
-                      margin=dict(
-                          l=10,
-                          r=10,
-                          b=100,
-                          t=100,
-                          pad=1),
-                      paper_bgcolor="LightSteelBlue",
-                      )
+    fig.update_layout(template='plotly_dark', title=dict(font=dict(size=18), x=0.5, xanchor='center'), height=900)
 
     return fig
 
@@ -168,18 +166,7 @@ def update_bottom_plot(clickData, hoverData, data_type):
 
     fig.update_layout(hovermode='x unified')
 
-    fig.update_layout(title=dict(font=dict(size=28), x=0.5, y=0.9, xanchor='center', yanchor='top'),
-                      autosize=False,
-                      width=700,
-                      height=400,
-                      margin=dict(
-                          l=0,
-                          r=10,
-                          b=10,
-                          t=100,
-                          pad=1),
-                      paper_bgcolor="LightSteelBlue",
-                      )
+    fig.update_layout(template='plotly_dark', title=dict(font=dict(size=14), x=0.5, y=0.9, xanchor='center', yanchor='top'))
     return fig
 
 
@@ -217,16 +204,5 @@ def update_top_plot(data_type='positive', clickData='OR', hoverData='CA'):
 
     fig.update_layout(hovermode='x unified')
 
-    fig.update_layout(title=dict(font=dict(size=28), x=0.5, y=0.9, xanchor='center', yanchor='top'),
-                      autosize=False,
-                      width=700,
-                      height=400,
-                      margin=dict(
-                          l=0,
-                          r=10,
-                          b=10,
-                          t=100,
-                          pad=1),
-                      paper_bgcolor="LightSteelBlue",
-                      )
+    fig.update_layout(template='plotly_dark', title=dict(font=dict(size=14), x=0.5, y=0.9, xanchor='center', yanchor='top'))
     return fig
