@@ -11,14 +11,15 @@ class GetCovidData:
         self.covid_url = "https://api.covidtracking.com/v1/states/daily.csv"
         self.covid_file_name = "daily_covid_data.csv"
         self.covid_df = None
-        self.variant_url = "https://www.cdc.gov/mmwr/volumes/70/wr/mm7003e2.htm"
+        self.variant_url = "https://www.cdc.gov/coronavirus/2019-ncov/transmission/docs/02282021_Web-UpdateCSV-TABLE.csv"
         self.variant_file_name = "daily_variant_data.csv"
         self.variant_df = None
         self.download_covid_data()
         self.download_variant_data()
         self.data_analysis()
         # output to csv for storage
-        self.covid_df.to_csv(self.covid_file_name)
+        self.covid_df.to_csv(self.covid_file_name, index=False)
+        self.variant_df.to_csv(self.variant_file_name, index=False)
 
     def was_file_modified_today(self, filename=None):
 
@@ -56,29 +57,17 @@ class GetCovidData:
 
         # if the file is more than a day old, refresh the file
         if not self.was_file_modified_today(self.variant_file_name):
-            # scrape data from cdc website and load into df
-            df_list = pd.read_html(self.variant_url)
-            df = df_list[0]
+            # download the csv from CDC
+            self.variant_df = pd.read_csv(self.variant_file_name)
+            df = pd.read_csv(self.variant_url)
 
-            # rename columns
-            col_names = ["Variant designation",
-                         "Location",
-                         "Date",
-                         "Characteristic mutations",
-                         "United States",
-                         "Worldwide",
-                         "No. of countries with sequences"]
-            df.columns = col_names
+            # create date column
+            df['date'] = pd.Timestamp("today").strftime("%m/%d/%Y")
 
-            # add todays date to df
-            df['date'] = date.today()
+            # append together
+            self.variant_df.append(df)
 
-            # load previous data and append today's data and write to csv
-            df2 = pd.read_csv(self.variant_file_name)
-            self.variant_df = df2.append(df)
-            self.variant_df.to_csv(self.variant_file_name, index=False)
-
-        # otherwise just load the data
+        # otherwise load the csv already downloaded
         else:
             self.variant_df = pd.read_csv(self.variant_file_name)
 
