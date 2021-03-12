@@ -83,8 +83,6 @@ layout_page_2 = dbc.Container([
     ])
 ], fluid=True)
 
-
-
 # Page 2 callbacks
 @app.callback(
     Output("C19_Map", "figure"),
