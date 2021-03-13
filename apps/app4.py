@@ -3,12 +3,9 @@ import dash_html_components as html
 import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output
-from datetime import date, datetime
-from Daily_COVID_Data import GetCovidData
 from app import app
 
-new_df = GetCovidData()
-df = new_df.variant_df
+df = pd.read_csv("daily_variant_data.csv")
 
 layout_page_4 = html.Div([
 
@@ -21,7 +18,8 @@ layout_page_4 = html.Div([
                 {'label': 'P.1 Variant ', 'value': 'P.1 Variant '},
                 {'label': 'B.1.351 Variant ', 'value': 'B.1.351 Variant '}
             ],
-            value='B.1.1.7 Variant '
+            value='B.1.1.7 Variant ',
+            style ={'color': 'black'}
         )
 
     ],
@@ -61,7 +59,7 @@ def update_output(data_type):
                         hover_data=["B.1.1.7 Variant ", "P.1 Variant ", "B.1.351 Variant "],
                         color_continuous_scale=px.colors.sequential.Plasma)
 
-    fig.update_layout(title=dict(font=dict(size=28), x=0.5, xanchor='center'),
+    fig.update_layout(template='plotly_dark', title=dict(font=dict(size=28), x=0.5, xanchor='center'),
                       autosize=False,
                       width=1100,
                       height=800,
@@ -70,8 +68,7 @@ def update_output(data_type):
                           r=10,
                           b=100,
                           t=100,
-                          pad=1),
-                      paper_bgcolor="LightSteelBlue",
+                          pad=1)
                       )
 
     return fig

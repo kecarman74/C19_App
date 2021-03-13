@@ -4,12 +4,10 @@ import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output
 from datetime import date, datetime
-from Daily_COVID_Data import GetCovidData
 from app import app
 import dash_bootstrap_components as dbc
 
-new_df = GetCovidData()
-df = new_df.covid_df
+df = pd.read_csv("daily_covid_data.csv")
 
 data_cat_dict = {
     "positive": "Cumulative Positive" ,

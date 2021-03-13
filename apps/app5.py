@@ -3,12 +3,10 @@ import dash_html_components as html
 import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output
-from datetime import date, datetime
-from Daily_COVID_Data import GetCovidData
 from app import app
 
-new_df = GetCovidData()
-df = new_df.covid_df
+
+df = pd.read_csv("daily_covid_data.csv")
 
 data_cat_dict = {
     "positive": "Cumulative Positive" ,
@@ -38,7 +36,8 @@ layout_page_5 = html.Div([
                 {'label': 'Cases Per 100k Pop', 'value': 'cases_per_100k'},
                 {'label': 'Cumulative Test Positivity', 'value': 'total_pos_rate'}
             ],
-            value='positive'
+            value='positive',
+            style ={'color': 'black'}
         )
 
     ],
@@ -78,7 +77,7 @@ def update_output(data_type):
                         locationmode="USA-states",
                         color_continuous_scale=px.colors.sequential.Plasma)
 
-    fig.update_layout(title=dict(font=dict(size=28), x=0.5, xanchor='center'),
+    fig.update_layout(template='plotly_dark', title=dict(font=dict(size=28), x=0.5, xanchor='center'),
                       autosize=False,
                       width=1100,
                       height=800,
@@ -87,8 +86,7 @@ def update_output(data_type):
                           r=10,
                           b=100,
                           t=100,
-                          pad=1),
-                      paper_bgcolor="LightSteelBlue",
+                          pad=1)
                       )
 
     return fig

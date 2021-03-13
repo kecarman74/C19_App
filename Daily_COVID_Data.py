@@ -2,7 +2,7 @@ import pandas as pd
 import pathlib
 import datetime
 from datetime import date
-
+from datetime import datetime
 
 
 class GetCovidData:
@@ -11,11 +11,18 @@ class GetCovidData:
         self.covid_url = "https://api.covidtracking.com/v1/states/daily.csv"
         self.covid_file_name = "daily_covid_data.csv"
         self.covid_df = None
-        self.variant_url = "https://www.cdc.gov/coronavirus/2019-ncov/transmission/docs/02282021_Web-UpdateCSV-TABLE.csv"
+        self.today = datetime.today().strftime('%m%d%Y')
+        self.variant_url = "https://www.cdc.gov/coronavirus/2019-ncov/downloads/transmission/" + self.today + "_Web-UpdateCSV-TABLE.csv"
         self.variant_file_name = "daily_variant_data.csv"
         self.variant_df = None
-        self.download_covid_data()
-        self.download_variant_data()
+        try:
+            self.download_covid_data()
+        except:
+            print("error downloading COVID data ")
+        try:
+            self.download_variant_data()
+        except:
+            print("")
         self.data_analysis()
         # output to csv for storage
         self.covid_df.to_csv(self.covid_file_name, index=False)
@@ -84,5 +91,6 @@ class GetCovidData:
         self.covid_df['total_pos_rate'] = self.covid_df['positive'] / self.covid_df['totalTestResults'] * 100
 
 
-
+if __name__ == '__main__':
+    new_data = GetCovidData()
 
