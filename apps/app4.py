@@ -46,7 +46,7 @@ html.Div([
     Output("C19_Map_V", "figure"),
     Input('select_data_type', 'value')
 )
-def update_output(data_type):
+def update_output_variant(data_type):
     df = pd.read_csv("daily_variant_data.csv")
 
     fig = px.choropleth(df,

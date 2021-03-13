@@ -87,7 +87,7 @@ layout_page_2 = dbc.Container([
     [Input('date_picker', 'date'),
     Input('select_data_type', 'value')]
 )
-def update_output(date_selected, data_type):
+def update_output_cases(date_selected, data_type):
     df = pd.read_csv("daily_covid_data.csv")
 
     if len(date_selected) == 10:
