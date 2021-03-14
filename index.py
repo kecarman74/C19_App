@@ -36,5 +36,5 @@ def display_page(pathname):
         return '404-Oops, these are not the pages you are looking for'
 
 if __name__ == '__main__':
-    new_data = GetCovidData()
     app.run_server(debug=True)
+    new_data = GetCovidData()
