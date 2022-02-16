@@ -7,3 +7,8 @@ Instrucitons for building and launching app locally.
 5. Install dependencies by using the command "pip install -r requirements.txt"
 6. Launch the app by using the command "python3 index.py"
 7. By default the app will launch to 127.0.0.1:8050, so you can open a web browser and view it locally at that URL.
+
+
+Web app is hosted at Heroku to view. It is slow, but free. Please be patient.
+https://usacovidtracker.herokuapp.com/
+
